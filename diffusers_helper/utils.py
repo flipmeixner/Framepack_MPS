@@ -318,12 +318,24 @@ def add_tensors_with_padding(tensor1, tensor2):
 
 
 def print_free_mem():
-    torch.cuda.empty_cache()
-    free_mem, total_mem = torch.cuda.mem_get_info(0)
-    free_mem_mb = free_mem / (1024 ** 2)
-    total_mem_mb = total_mem / (1024 ** 2)
-    print(f"Free memory: {free_mem_mb:.2f} MB")
-    print(f"Total memory: {total_mem_mb:.2f} MB")
+    from diffusers_helper.device_utils import get_device, empty_cache, get_free_memory_gb
+    
+    device = get_device()
+    empty_cache(device)
+    
+    if device.type == "cuda":
+        free_mem, total_mem = torch.cuda.mem_get_info(0)
+        free_mem_mb = free_mem / (1024 ** 2)
+        total_mem_mb = total_mem / (1024 ** 2)
+        print(f"Free memory: {free_mem_mb:.2f} MB")
+        print(f"Total memory: {total_mem_mb:.2f} MB")
+    elif device.type == "mps":
+        # MPS doesn't provide direct memory info
+        free_mem_gb = get_free_memory_gb(device)
+        print(f"Estimated free memory: {free_mem_gb:.2f} GB")
+    else:
+        print("Memory tracking not available for this device")
+    
     return
 
 
